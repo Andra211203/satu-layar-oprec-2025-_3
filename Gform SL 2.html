@@ -297,6 +297,8 @@
         const totalSteps = formSteps.length;
         const statusMessage = document.getElementById('statusMessage');
         let isSubmitting = false;
+        // Tambahan: Flag untuk melacak apakah formulir sudah berhasil disubmit
+        let isFormSubmitted = false;
 
         const WHATSAPP_LINK = "https://chat.whatsapp.com/IbnZOvQg0wq7ASuUIZrdMA";
 
@@ -341,6 +343,9 @@
         form.addEventListener('input', saveFormProgress);
 
         function updateFormSteps() {
+            // Jika formulir sudah disubmit, jangan izinkan navigasi
+            if (isFormSubmitted) return;
+
             formSteps.forEach((step, index) => {
                 step.classList.toggle('active', index === currentStep);
             });
@@ -446,8 +451,14 @@
         });
         
         form.addEventListener('submit', (e) => {
-            if (isSubmitting) {
+            // Tambahan: Cegah submit jika formulir sudah berhasil dikirim
+            if (isSubmitting || isFormSubmitted) {
                 e.preventDefault();
+                // Tampilkan pesan jika pengguna mencoba submit lagi
+                if (isFormSubmitted) {
+                    statusMessage.textContent = 'Anda sudah mengirim formulir. Silakan refresh halaman untuk mencoba lagi.';
+                    statusMessage.className = 'mt-4 text-center text-yellow-500';
+                }
                 return;
             }
 
@@ -455,7 +466,7 @@
                 e.preventDefault();
             } else {
                 isSubmitting = true;
-                statusMessage.textContent = 'Mengirim formulin...';
+                statusMessage.textContent = 'Mengirim formulir...';
                 statusMessage.className = 'mt-4 text-center text-gray-500';
             }
         });
@@ -469,8 +480,15 @@
                         // Hapus data dari localStorage setelah berhasil submit
                         localStorage.removeItem('filmmakerForm');
 
+                        // Set flag formulir sudah disubmit
+                        isFormSubmitted = true;
+                        
+                        // Sembunyikan tombol navigasi dan formulir
+                        navButtons.style.display = 'none';
+                        document.querySelector('.form-step.active').style.display = 'none';
+
                         // Tampilkan pesan sukses dan redirect
-                        statusMessage.textContent = 'Terima Kasih! Mengalihkan ke grup WhatsApp...';
+                        statusMessage.innerHTML = '<h2>Terima Kasih!</h2><p>Formulir Anda telah terkirim. Anda akan dialihkan ke grup WhatsApp.</p>';
                         statusMessage.className = 'mt-4 text-center text-green-600';
                         
                         // Redirect ke grup WhatsApp setelah jeda singkat
@@ -485,7 +503,15 @@
                 } catch (error) {
                     // Catch the cross-origin error and assume success
                     localStorage.removeItem('filmmakerForm');
-                    statusMessage.textContent = 'Terima Kasih! Mengalihkan ke grup WhatsApp...';
+                    
+                    // Set flag formulir sudah disubmit
+                    isFormSubmitted = true;
+                    
+                    // Sembunyikan tombol navigasi dan formulir
+                    navButtons.style.display = 'none';
+                    document.querySelector('.form-step.active').style.display = 'none';
+
+                    statusMessage.innerHTML = '<h2>Terima Kasih!</h2><p>Formulir Anda telah terkirim. Anda akan dialihkan ke grup WhatsApp.</p>';
                     statusMessage.className = 'mt-4 text-center text-green-600';
                     setTimeout(() => {
                         window.location.href = WHATSAPP_LINK;
